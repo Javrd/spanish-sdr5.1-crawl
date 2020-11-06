@@ -1,4 +1,5 @@
 def find_index(flist, func):
-    for i, v in enumerate(flist):
-        if func(v): return i
+    for idx, var in enumerate(flist):
+        if func(var):
+            return idx
     return -1

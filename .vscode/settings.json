@@ -1,9 +1,14 @@
 {
     "python.pythonPath": "env/bin/python",
+    "python.linting.pylintPath": "env/bin/pylint",
+    "python.analysis.extraPaths": ["src/"],
+    "python.autoComplete.extraPaths": ["src/"],
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
     "python.formatting.provider": "yapf",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
     },
-    "editor.trimAutoWhitespace": true
+    "editor.trimAutoWhitespace": true,
 }
