@@ -20,10 +20,10 @@ def extract_name(content: Tag) -> str:
 
 def extract_subtitle_info(content: Tag) -> Tuple[str, str, str, List[str]]:
     subtitle_text: str = content.p.text
-    subtitle = subtitle_text.replace('\n', '').split(",")
+    subtitle = subtitle_text.replace('\n', '').split(',')
     alignment = subtitle.pop().strip()
-    size_type_info = ",".join(subtitle).strip()
-    size_type_list = size_type_info.split(" ")
+    size_type_info = ','.join(subtitle).strip()
+    size_type_list = size_type_info.split(' ')
     tags = []
     match = re.search(r'\((.+?)\)', size_type_info)
     if match:
@@ -31,32 +31,32 @@ def extract_subtitle_info(content: Tag) -> Tuple[str, str, str, List[str]]:
         tags += details.split(',')
 
         size_type_info = size_type_info.replace(match.group(0), '').strip()
-        size_type_list = size_type_info.split(" ")
+        size_type_list = size_type_info.split(' ')
         size = size_type_list.pop().strip()
-        type_ = " ".join(size_type_list).strip()
-    elif size_type_list[0] == "Enjambre":
-        type_ = f"{size_type_list[3][0].upper()}{size_type_list[3][1:-1]}"
+        type_ = ' '.join(size_type_list).strip()
+    elif size_type_list[0] == 'Enjambre':
+        type_ = f'{size_type_list[3][0].upper()}{size_type_list[3][1:-1]}'
         type_ = type_.strip()
         size = size_type_list[1].strip()
         tags.append(size_type_list[0].strip())
     else:
         size = size_type_list.pop()
-        type_ = " ".join(size_type_list)
+        type_ = ' '.join(size_type_list)
 
     return alignment, size, type_, tags
 
 
 def extract_description(content: Tag) -> str:
     p_list = content.find_all('p')
-    ac_tag = content.find("b", string=re.compile(r"Clase de Armadura:?\s?"))
+    ac_tag = content.find('b', string=re.compile(r'Clase de Armadura:?\s?'))
     ac_index = find_index(p_list, lambda p: p.b == ac_tag)
-    return "\n".join([p.text.replace('\n', ' ') for p in p_list[1:ac_index]])
+    return '\n'.join([p.text.replace('\n', ' ') for p in p_list[1:ac_index]])
 
 
 def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
     result = []
-    ac_text = extract_text_from_parent_tag(content, "Clase de Armadura")
-    acs = ac_text.split(",")
+    ac_text = extract_text_from_parent_tag(content, 'Clase de Armadura')
+    acs = ac_text.split(',')
 
     if len(acs) > 1 and not acs[1][1].strip().isdigit():
         acs = [', '.join(acs)]
@@ -68,9 +68,9 @@ def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
         ac_array = armor_class.split(' ')
 
         if len(ac_array) > 1 and ac_array[1][1].isdigit():
-            second_ac = " ".join(ac_array[1:])
+            second_ac = ' '.join(ac_array[1:])
             armor_class = armor_class.replace(second_ac, '').strip()
-            second_ac = second_ac.replace("(", "").replace(")", "")
+            second_ac = second_ac.replace('(', '').replace(')', '')
             acs.append(second_ac)
 
         match = re.search(r'\((.+?)\)', armor_class)
@@ -79,17 +79,17 @@ def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
             armor_class = armor_class.replace(match.group(0), '')
 
         armor_class, *condition_array = armor_class.split(' ')
-        condition = " ".join(condition_array).strip()
+        condition = ' '.join(condition_array).strip()
         result.append({
-            "amount": int(armor_class),
-            "type": type_,
-            "condition": condition
+            'amount': int(armor_class),
+            'type': type_,
+            'condition': condition
         })
     return result
 
 
 def extract_hit_points(content: Tag) -> Tuple[int, str]:
-    search = "Puntos de golpe"
+    search = 'Puntos de golpe'
     hp_text = extract_text_from_parent_tag(content, search)
     if not hp_text:
         hp_text = extract_text_from_tag(content, search, tag='p')
@@ -100,7 +100,7 @@ def extract_hit_points(content: Tag) -> Tuple[int, str]:
 
 
 def extract_speed(content: Tag) -> str:
-    speed_text = extract_text_from_parent_tag(content, "Velocidad")
+    speed_text = extract_text_from_parent_tag(content, 'Velocidad')
     match = re.search(r'\((.+?)\)', speed_text)
     special_array = []
 
@@ -112,24 +112,24 @@ def extract_speed(content: Tag) -> str:
                                                    '').strip()
             special_array = [
                 f'{speed} {special_condition.group(0)}'
-                for speed in special_speed.split(", ")
+                for speed in special_speed.split(', ')
             ]
 
     speed_array = [
-        speed.strip() for speed in speed_text.replace('.', ',').split(", ")
+        speed.strip() for speed in speed_text.replace('.', ',').split(', ')
     ]
     speed_array += special_array
 
     result = {}
     for speed in speed_array:
-        speed_splitted = speed.split(" ")
+        speed_splitted = speed.split(' ')
         if not speed_splitted[0][0].isdecimal():
             speed_splitted.append(speed_splitted.pop(0).lower())
 
         if len(speed_splitted) < 3:
             speed_splitted.append('caminando')
 
-        result[" ".join(speed_splitted[2:])] = int(speed_splitted[0])
+        result[' '.join(speed_splitted[2:])] = int(speed_splitted[0])
 
     return result
 
@@ -150,39 +150,39 @@ def extract_abilities(content: Tag) -> Dict[str, int]:
         abilities.append(int(ability))
 
     result = {
-        "strength": abilities[0],
-        "dexterity": abilities[1],
-        "constitution": abilities[2],
-        "intelligence": abilities[3],
-        "wisdom": abilities[4],
-        "charisma": abilities[5],
+        'strength': abilities[0],
+        'dexterity': abilities[1],
+        'constitution': abilities[2],
+        'intelligence': abilities[3],
+        'wisdom': abilities[4],
+        'charisma': abilities[5],
     }
     return result
 
 
 def extract_saving_throws(content: Tag) -> Dict[str, int]:
-    throws_text = extract_text_from_parent_tag(content, "Tiradas de salvación")
+    throws_text = extract_text_from_parent_tag(content, 'Tiradas de salvación')
     result = {}
     if throws_text:
-        throws_array = throws_text.split(",")
+        throws_array = throws_text.split(',')
         for saving_throw in throws_array:
-            match = re.search(r"(\w{3})\s(.+)", saving_throw)
+            match = re.search(r'(\w{3})\s(.+)', saving_throw)
             if match:
                 result[match.group(1)] = int(match.group(2))
     return result
 
 
 def extract_skills(content: Tag) -> Dict[str, int]:
-    skills_text = extract_text_from_parent_tag(content, "Habilidades")
+    skills_text = extract_text_from_parent_tag(content, 'Habilidades')
     result = {}
     if skills_text:
-        skills_array = skills_text.split(",")
+        skills_array = skills_text.split(',')
         for skill in skills_array:
             special = re.search(r'\((.+?)\)', skill)
             if special:
                 skill = skill.replace(special.group(0), '')
 
-            match = re.search(r"(\w+[\s?\w*]+)\s(.+)", skill)
+            match = re.search(r'(\w+[\s?\w*]+)\s(.+)', skill)
             if match:
                 result[match.group(1)] = int(match.group(2))
                 if special:
@@ -192,22 +192,22 @@ def extract_skills(content: Tag) -> Dict[str, int]:
 
 
 def extract_vulnerabilities(content: Tag) -> List[str]:
-    text = extract_text_from_parent_tag(content, "Vulnerabilidades al daño")
+    text = extract_text_from_parent_tag(content, 'Vulnerabilidades al daño')
     return extract_damage_text(text) if text else []
 
 
 def extract_resistances(content: Tag) -> List[str]:
-    text = extract_text_from_parent_tag(content, "Resistencias al daño")
+    text = extract_text_from_parent_tag(content, 'Resistencias al daño')
     return extract_damage_text(text) if text else []
 
 
 def extract_immunities(content: Tag) -> List[str]:
-    text = extract_text_from_parent_tag(content, "Inmunidades al daño")
+    text = extract_text_from_parent_tag(content, 'Inmunidades al daño')
     return extract_damage_text(text) if text else []
 
 
 def extract_condition_immunities(content: Tag) -> List[str]:
-    text = extract_text_from_parent_tag(content, "Inmunidades a estados")
+    text = extract_text_from_parent_tag(content, 'Inmunidades a estados')
     if text:
         return [text.strip().capitalize() for text in text.split(',')]
     else:
@@ -215,10 +215,10 @@ def extract_condition_immunities(content: Tag) -> List[str]:
 
 
 def extract_senses(content: Tag) -> List[str]:
-    text = extract_text_from_parent_tag(content, "Sentidos")
+    text = extract_text_from_parent_tag(content, 'Sentidos')
     if not text:
         p_list = content.find_all('p')
-        languages_tag = content.find("b", string=re.compile(r"Idiomas:?\s?"))
+        languages_tag = content.find('b', string=re.compile(r'Idiomas:?\s?'))
         language_index = find_index(p_list, lambda p: p.b == languages_tag) - 1
         text = p_list[language_index].b.parent.text
 
@@ -226,10 +226,10 @@ def extract_senses(content: Tag) -> List[str]:
 
 
 def extract_languages(content: Tag) -> List[str]:
-    languages_text = extract_text_from_parent_tag(content, "Idiomas")
+    languages_text = extract_text_from_parent_tag(content, 'Idiomas')
     if not languages_text:
         p_list = content.find_all('p')
-        senses_tag = content.find("b", string=re.compile(r"Sentidos:?\s?"))
+        senses_tag = content.find('b', string=re.compile(r'Sentidos:?\s?'))
         language_index = find_index(p_list, lambda p: p.b == senses_tag) + 1
         languages_text = p_list[language_index].text
 
@@ -240,15 +240,15 @@ def extract_languages(content: Tag) -> List[str]:
         special = languages_text.split(';')
         special_match = None
         if len(special) > 1:
-            special_match = re.search("telepatía", special[1])
+            special_match = re.search('telepatía', special[1])
             languages_text.replace(';', ',')
             languages_text = re.sub(special[0] + ';', '', languages_text)
         result = ['No puede hablar']
         languages_text = re.sub(cant_speak.group(0), '', languages_text)
-        languages_text = re.sub("^Entiende", '', languages_text).strip()
-        languages_text = re.sub("^entiende", '', languages_text).strip()
+        languages_text = re.sub('^Entiende', '', languages_text).strip()
+        languages_text = re.sub('^entiende', '', languages_text).strip()
         result += [
-            "Entiende " + text.strip().lower()
+            'Entiende ' + text.strip().lower()
             for text in re.split(',| y | e ', languages_text) if text != '-'
         ]
         if special_match:
@@ -260,22 +260,22 @@ def extract_languages(content: Tag) -> List[str]:
             for text in re.split(',| y | e ', languages_text) if text != '-'
         ]
 
-    if result and result[-1] == "Pero no lo habla":
-        result[-2] = result[-2] + ", pero no lo habla"
+    if result and result[-1] == 'Pero no lo habla':
+        result[-2] = result[-2] + ', pero no lo habla'
         result.pop()
 
     return result
 
 
 def extract_challenge_rating(content: Tag) -> str:
-    return extract_text_from_parent_tag(content, "Desafío")
+    return extract_text_from_parent_tag(content, 'Desafío')
 
 
 def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
     p_list = content.find_all('p')
-    tag = content.find("b", string=re.compile(r"Desafío:?\s?"))
+    tag = content.find('b', string=re.compile(r'Desafío:?\s?'))
     cr_index = find_index(p_list, lambda p: p.b == tag)
-    tag = content.find("b", string=re.compile(r"Acciones:?\s?"))
+    tag = content.find('b', string=re.compile(r'Acciones:?\s?'))
     actions_index = find_index(p_list, lambda p: p.b == tag)
     end = actions_index if actions_index != -1 else len(p_list) - 1
     special_abilities = p_list[cr_index + 1:end]
@@ -291,7 +291,7 @@ def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
             ability['name'] = name
             ability['description'] = desc
 
-            caster = re.search("Lanzamiento de conjuro", tag.i.text)
+            caster = re.search('Lanzamiento de conjuro', tag.i.text)
             if caster:
                 ability['spells'] = []
 
@@ -318,8 +318,8 @@ def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
 
 
 def extract_actions(content: Tag) -> Dict[str, str]:
-    return "TODO"
+    return 'TODO'
 
 
 def extract_legendary_actions(content: Tag) -> Dict[str, str]:
-    return "TODO"
+    return 'TODO'

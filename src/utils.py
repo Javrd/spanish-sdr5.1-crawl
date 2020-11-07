@@ -30,20 +30,20 @@ def get_soup_with_cache(base, path):
         with open(cache_name, 'w+') as file:
             file.write(html)
 
-    return BeautifulSoup(html, "html.parser")
+    return BeautifulSoup(html, 'html.parser')
 
 
 def get_creature_paths(creature_index):
-    option = creature_index.find("option", string="Animales por Nombre")
-    animals = option.parent.find_all("option", value=True)
-    option = creature_index.find("option", string="PNJs por Nombre")
-    npcs = option.parent.find_all("option", value=True)
-    option = creature_index.find("option", string="Monstruos por Nombre")
-    monsters = option.parent.find_all("option", value=True)
+    option = creature_index.find('option', string='Animales por Nombre')
+    animals = option.parent.find_all('option', value=True)
+    option = creature_index.find('option', string='PNJs por Nombre')
+    npcs = option.parent.find_all('option', value=True)
+    option = creature_index.find('option', string='Monstruos por Nombre')
+    monsters = option.parent.find_all('option', value=True)
 
     paths = animals + npcs + monsters
 
-    return [(path["value"]).replace("./", "") for path in paths]
+    return [(path['value']).replace('./', '') for path in paths]
 
 
 def extract_text_from_parent_tag(content, search, tag='b'):
@@ -51,25 +51,25 @@ def extract_text_from_parent_tag(content, search, tag='b'):
 
 
 def extract_text_from_tag(content, search, tag='b', parent=False):
-    tag = content.find(tag, string=re.compile(search + r":?\s?"))
+    tag = content.find(tag, string=re.compile(search + r':?\s?'))
 
     if tag:
         if parent:
             text = tag.parent.text
         else:
             text = tag.text
-        return re.sub(search + r":?\s?", '', text).replace('\n', ' ').strip()
+        return re.sub(search + r':?\s?', '', text).replace('\n', ' ').strip()
 
     return None
 
 
 def extract_damage_text(input_text):
     result = []
-    for text in input_text.split(";"):
+    for text in input_text.split(';'):
         # Skip errates
         if (any(char.isdigit() for char in text)):
             continue
-        match = re.search(r"( de ataques.+)|( de armas.+)", text)
+        match = re.search(r'( de ataques.+)|( de armas.+)', text)
         if match:
             text = re.sub(match.group(0), '', text)
             text_array = re.split(',|y', text)
