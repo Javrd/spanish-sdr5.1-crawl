@@ -192,35 +192,66 @@ def extract_skills(content: Tag) -> Dict[str, int]:
 
 def extract_vulnerabilities(content):
     text = extract_text_from_parent_tag(content, "Vulnerabilidades al daño")
-    if text:
-        return extract_damage_text(text)
-    return None
+    return extract_damage_text(text) if text else []
 
 
 def extract_resistances(content):
     text = extract_text_from_parent_tag(content, "Resistencias al daño")
-    if text:
-        return extract_damage_text(text)
-    return None
+    return extract_damage_text(text) if text else []
 
 
 def extract_immunities(content):
     text = extract_text_from_parent_tag(content, "Inmunidades al daño")
-    if text:
-        return extract_damage_text(text)
-    return None
+    return extract_damage_text(text) if text else []
 
 
 def extract_condition_immunities(content):
-    return "TODO"
+    text = extract_text_from_parent_tag(content, "Inmunidades a estados")
+    if text:
+        return [text.strip().capitalize() for text in text.split(',')]
+    else:
+        return []
 
 
 def extract_senses(content):
-    return "TODO"
+    text = extract_text_from_parent_tag(content, "Sentidos")
+    return [text.strip().capitalize() for text in text.split(',')]
 
 
 def extract_languages(content):
-    return "TODO"
+    languages_text = extract_text_from_parent_tag(content, "Idiomas")
+    cant_speak = re.search(', pero no puede hablar', languages_text)
+
+    if cant_speak:
+
+        special = languages_text.split(';')
+        special_match = None
+        if len(special) > 1:
+            special_match = re.search("telepatía", special[1])
+            languages_text.replace(';', ',')
+            languages_text = re.sub(special[0] + ';', '', languages_text)
+        result = ['No puede hablar']
+        languages_text = re.sub(cant_speak.group(0), '', languages_text)
+        languages_text = re.sub("^Entiende", '', languages_text).strip()
+        languages_text = re.sub("^entiende", '', languages_text).strip()
+        result += [
+            "Entiende " + text.strip().lower()
+            for text in re.split(',| y | e ', languages_text) if text != '-'
+        ]
+        if special_match:
+            result.append(special.special[1].strip().capitalize())
+
+    else:
+        result = [
+            text.strip().capitalize()
+            for text in re.split(',| y | e ', languages_text) if text != '-'
+        ]
+
+    if result and result[-1] == "Pero no lo habla":
+        result[-2] = result[-2] + ", pero no lo habla"
+        result.pop()
+
+    return result
 
 
 def extract_challenge_rating(content: Tag) -> str:
