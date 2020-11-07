@@ -1,46 +1,10 @@
-import os
 import re
 from typing import Dict, List, Tuple, Union
 
-import requests
-from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from utils import find_index
-
-
-def get_soup_with_cache(base, path):
-
-    cache_folder = f'{os.path.dirname(os.path.realpath(__file__))}/../cache/'
-    if not os.path.isdir(cache_folder):
-        os.mkdir(cache_folder)
-
-    cache_name = cache_folder + path.replace('/', '-')
-    if os.path.isfile(cache_name):
-        with open(cache_name, 'r') as file:
-            html = file.read()
-    else:
-        response = requests.get(base + path)
-        response.encoding = 'utf-8'
-        html = response.text
-
-        with open(cache_name, 'w+') as file:
-            file.write(html)
-
-    return BeautifulSoup(html, "html.parser")
-
-
-def get_creature_paths(creature_index):
-    option = creature_index.find("option", string="Animales por Nombre")
-    animals = option.parent.find_all("option", value=True)
-    option = creature_index.find("option", string="PNJs por Nombre")
-    npcs = option.parent.find_all("option", value=True)
-    option = creature_index.find("option", string="Monstruos por Nombre")
-    monsters = option.parent.find_all("option", value=True)
-
-    paths = animals + npcs + monsters
-
-    return [(path["value"]).replace("./", "") for path in paths]
+from utils import (extract_damage_text, extract_text_from_parent_tag,
+                   extract_text_from_tag, find_index)
 
 
 def extract_name(content: Tag) -> str:
@@ -90,9 +54,7 @@ def extract_description(content: Tag) -> str:
 
 def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
     result = []
-    ac_tag = content.find("b", string=re.compile(r"Clase de Armadura:?\s?"))
-    ac_text = ac_tag.parent.text
-    ac_text = " ".join(ac_text.replace('\n', ' ').split(' ')[3:])
+    ac_text = extract_text_from_parent_tag(content, "Clase de Armadura")
     acs = ac_text.split(",")
 
     if len(acs) > 1 and not acs[1][1].strip().isdigit():
@@ -126,12 +88,10 @@ def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
 
 
 def extract_hit_points(content: Tag) -> Tuple[int, str]:
-    hp_tag = content.find("b", string=re.compile(r"Puntos de golpe:?\s?"))
-    if hp_tag:
-        hp_tag = hp_tag.parent
-    else:
-        hp_tag = content.find("p", string=re.compile(r"Puntos de golpe:?\s?"))
-    hp_text = " ".join(hp_tag.text.replace('\n', ' ').split(' ')[3:])
+    search = "Puntos de golpe"
+    hp_text = extract_text_from_parent_tag(content, search)
+    if not hp_text:
+        hp_text = extract_text_from_tag(content, search, tag='p')
     match = re.search(r'\((.+?)\)', hp_text)
     dice = match.group(1).strip()
     hit_points = hp_text.replace(match.group(0), '').strip()
@@ -139,9 +99,7 @@ def extract_hit_points(content: Tag) -> Tuple[int, str]:
 
 
 def extract_speed(content: Tag) -> str:
-    speed_tag = content.find("b", string=re.compile(r"Velocidad:?\s?"))
-    speed_text = " ".join(
-        speed_tag.parent.text.replace('\n', ' ').split(' ')[1:])
+    speed_text = extract_text_from_parent_tag(content, "Velocidad")
     match = re.search(r'\((.+?)\)', speed_text)
     special_array = []
 
@@ -202,12 +160,10 @@ def extract_abilities(content: Tag) -> Dict[str, int]:
 
 
 def extract_saving_throws(content: Tag) -> Dict[str, int]:
-    throws = content.find("b", string=re.compile(r"Tiradas de salvación:?\s?"))
+    throws_text = extract_text_from_parent_tag(content, "Tiradas de salvación")
     result = {}
-    if throws:
-        throws_text = re.sub(r"Tiradas de salvación:?\s?", '',
-                             throws.parent.text)
-        throws_array = throws_text.replace("\n", " ").split(",")
+    if throws_text:
+        throws_array = throws_text.split(",")
         for saving_throw in throws_array:
             match = re.search(r"(\w{3})\s(.+)", saving_throw)
             if match:
@@ -216,11 +172,10 @@ def extract_saving_throws(content: Tag) -> Dict[str, int]:
 
 
 def extract_skills(content: Tag) -> Dict[str, int]:
-    skills_tag = content.find("b", string=re.compile(r"Habilidades:?\s?"))
+    skills_text = extract_text_from_parent_tag(content, "Habilidades")
     result = {}
-    if skills_tag:
-        skills_text = re.sub(r"Habilidades:?\s?", '', skills_tag.parent.text)
-        skills_array = skills_text.replace("\n", " ").split(",")
+    if skills_text:
+        skills_array = skills_text.split(",")
         for skill in skills_array:
             special = re.search(r'\((.+?)\)', skill)
             if special:
@@ -230,21 +185,30 @@ def extract_skills(content: Tag) -> Dict[str, int]:
             if match:
                 result[match.group(1)] = int(match.group(2))
                 if special:
-                    condition = f'{match.group(1)} {special.group(1)[3:]}'
-                    result[condition] = int(special.group(1)[0:2])
+                    conditional = f'{match.group(1)} {special.group(1)[3:]}'
+                    result[conditional] = int(special.group(1)[0:2])
     return result
 
 
 def extract_vulnerabilities(content):
-    return "TODO"
+    text = extract_text_from_parent_tag(content, "Vulnerabilidades al daño")
+    if text:
+        return extract_damage_text(text)
+    return None
 
 
 def extract_resistances(content):
-    return "TODO"
+    text = extract_text_from_parent_tag(content, "Resistencias al daño")
+    if text:
+        return extract_damage_text(text)
+    return None
 
 
 def extract_immunities(content):
-    return "TODO"
+    text = extract_text_from_parent_tag(content, "Inmunidades al daño")
+    if text:
+        return extract_damage_text(text)
+    return None
 
 
 def extract_condition_immunities(content):
@@ -260,9 +224,7 @@ def extract_languages(content):
 
 
 def extract_challenge_rating(content: Tag) -> str:
-    challenge_tag = content.find("b", string=re.compile(r"Desafío:?\s?"))
-    challenge_text = challenge_tag.parent.text
-    return challenge_text.replace('\n', '').split(':')[1].strip().split(" ")[0]
+    return extract_text_from_parent_tag(content, "Desafío")
 
 
 def extract_special_abilities(content):

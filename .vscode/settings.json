@@ -1,6 +1,5 @@
 {
     "python.pythonPath": "env/bin/python",
-    "python.linting.pylintPath": "env/bin/pylint",
     "python.analysis.extraPaths": ["src/"],
     "python.autoComplete.extraPaths": ["src/"],
     "python.linting.enabled": true,
