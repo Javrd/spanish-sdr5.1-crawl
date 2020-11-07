@@ -1,6 +1,6 @@
-# D&D SDR 5.1 ESPAÑOL CRAWLER
+# D&D SRD 5.1 ESPAÑOL CRAWLER
 
-This in progress project is a crawler to get the Spanish SDR 5.1 in json format from http://srd.nosolorol.com/DD5/.
+This in progress project is a crawler to get the Spanish SRD 5.1 in json format from http://srd.nosolorol.com/DD5/.
 
 ## How to use it
 

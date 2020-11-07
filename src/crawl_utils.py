@@ -235,7 +235,43 @@ def extract_skills(content: Tag) -> Dict[str, int]:
     return result
 
 
+def extract_vulnerabilities(content):
+    return "TODO"
+
+
+def extract_resistances(content):
+    return "TODO"
+
+
+def extract_immunities(content):
+    return "TODO"
+
+
+def extract_condition_immunities(content):
+    return "TODO"
+
+
+def extract_senses(content):
+    return "TODO"
+
+
+def extract_languages(content):
+    return "TODO"
+
+
 def extract_challenge_rating(content: Tag) -> str:
     challenge_tag = content.find("b", string=re.compile(r"Desafío:?\s?"))
     challenge_text = challenge_tag.parent.text
     return challenge_text.replace('\n', '').split(':')[1].strip().split(" ")[0]
+
+
+def extract_special_abilities(content):
+    return "TODO"
+
+
+def extract_actions(content):
+    return "TODO"
+
+
+def extract_legendary_actions(content):
+    return "TODO"

@@ -24,7 +24,7 @@ def extract_from_url(path: str):
 
         name_id = unidecode(name).lower()
         name_id = name_id.replace(' ', '-').replace('(', '-').replace(')', '-')
-        fid = f"sdr5-spanish.{name_id}"
+        fid = f"srd5-spanish.{name_id}"
 
         alignment, size, type_, tags = cu.extract_subtitle_info(content)
         hit_points, hit_dice = cu.extract_hit_points(content)
@@ -47,16 +47,16 @@ def extract_from_url(path: str):
             "abilities": cu.extract_abilities(content),
             "saving-throws": cu.extract_saving_throws(content),
             "skills": cu.extract_skills(content),
-            "damage_vulnerabilities": "TODO",
-            "damage_resistances": "TODO",
-            "damage_immunities": "TODO",
-            "condition_immunities": "TODO",
-            "senses": "TODO",
-            "languages": "TODO",
+            "damage_vulnerabilities": cu.extract_vulnerabilities(content),
+            "damage_resistances": cu.extract_resistances(content),
+            "damage_immunities": cu.extract_immunities(content),
+            "condition_immunities": cu.extract_condition_immunities(content),
+            "senses": cu.extract_senses(content),
+            "languages": cu.extract_languages(content),
             "challenge_rating": cu.extract_challenge_rating(content),
-            "special_abilities": "TODO",
-            "actions": "TODO",
-            "legendary_actions": "TODO",
+            "special_abilities": cu.extract_special_abilities(content),
+            "actions": cu.extract_actions(content),
+            "legendary_actions": cu.extract_legendary_actions(content),
             "source": source,
         }
 
