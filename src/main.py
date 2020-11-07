@@ -62,7 +62,7 @@ def extract_from_url(path: str):
         }
 
     except Exception as _:
-        logger.error(f"Error: {link} couldn't been cu.extracted")
+        logger.error(f"Error: {link} couldn't been extracted")
         logger.error(f'{traceback.format_exc()}')
 
 

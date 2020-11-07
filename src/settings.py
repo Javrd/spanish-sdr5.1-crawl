@@ -10,6 +10,6 @@ def set_logger(name):
     log_file = logging.FileHandler(filename="crawl.log")
     console.setFormatter(formatter)
     log_file.setFormatter(formatter)
-    # logger.addHandler(console)
-    logger.addHandler(log_file)
+    logger.addHandler(console)
+    # logger.addHandler(log_file)
     return logger

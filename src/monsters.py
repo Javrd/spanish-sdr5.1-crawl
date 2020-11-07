@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Union
 
 from bs4.element import Tag
 
+from custom_types import SpecialAbility
 from utils import (extract_damage_text, extract_text_from_parent_tag,
                    extract_text_from_tag, find_index)
 
@@ -80,7 +81,7 @@ def extract_armor_class(content: Tag) -> List[Dict[str, Union[int, str]]]:
         armor_class, *condition_array = armor_class.split(' ')
         condition = " ".join(condition_array).strip()
         result.append({
-            "armor_class": int(armor_class),
+            "amount": int(armor_class),
             "type": type_,
             "condition": condition
         })
@@ -190,22 +191,22 @@ def extract_skills(content: Tag) -> Dict[str, int]:
     return result
 
 
-def extract_vulnerabilities(content):
+def extract_vulnerabilities(content: Tag) -> List[str]:
     text = extract_text_from_parent_tag(content, "Vulnerabilidades al daño")
     return extract_damage_text(text) if text else []
 
 
-def extract_resistances(content):
+def extract_resistances(content: Tag) -> List[str]:
     text = extract_text_from_parent_tag(content, "Resistencias al daño")
     return extract_damage_text(text) if text else []
 
 
-def extract_immunities(content):
+def extract_immunities(content: Tag) -> List[str]:
     text = extract_text_from_parent_tag(content, "Inmunidades al daño")
     return extract_damage_text(text) if text else []
 
 
-def extract_condition_immunities(content):
+def extract_condition_immunities(content: Tag) -> List[str]:
     text = extract_text_from_parent_tag(content, "Inmunidades a estados")
     if text:
         return [text.strip().capitalize() for text in text.split(',')]
@@ -213,13 +214,25 @@ def extract_condition_immunities(content):
         return []
 
 
-def extract_senses(content):
+def extract_senses(content: Tag) -> List[str]:
     text = extract_text_from_parent_tag(content, "Sentidos")
+    if not text:
+        p_list = content.find_all('p')
+        languages_tag = content.find("b", string=re.compile(r"Idiomas:?\s?"))
+        language_index = find_index(p_list, lambda p: p.b == languages_tag) - 1
+        text = p_list[language_index].b.parent.text
+
     return [text.strip().capitalize() for text in text.split(',')]
 
 
-def extract_languages(content):
+def extract_languages(content: Tag) -> List[str]:
     languages_text = extract_text_from_parent_tag(content, "Idiomas")
+    if not languages_text:
+        p_list = content.find_all('p')
+        senses_tag = content.find("b", string=re.compile(r"Sentidos:?\s?"))
+        language_index = find_index(p_list, lambda p: p.b == senses_tag) + 1
+        languages_text = p_list[language_index].text
+
     cant_speak = re.search(', pero no puede hablar', languages_text)
 
     if cant_speak:
@@ -239,7 +252,7 @@ def extract_languages(content):
             for text in re.split(',| y | e ', languages_text) if text != '-'
         ]
         if special_match:
-            result.append(special.special[1].strip().capitalize())
+            result.append(special[1].strip().capitalize())
 
     else:
         result = [
@@ -258,13 +271,55 @@ def extract_challenge_rating(content: Tag) -> str:
     return extract_text_from_parent_tag(content, "Desafío")
 
 
-def extract_special_abilities(content):
+def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
+    p_list = content.find_all('p')
+    tag = content.find("b", string=re.compile(r"Desafío:?\s?"))
+    cr_index = find_index(p_list, lambda p: p.b == tag)
+    tag = content.find("b", string=re.compile(r"Acciones:?\s?"))
+    actions_index = find_index(p_list, lambda p: p.b == tag)
+    end = actions_index if actions_index != -1 else len(p_list) - 1
+    special_abilities = p_list[cr_index + 1:end]
+
+    result = []
+    caster = None
+    for tag in special_abilities:
+        ability = {}
+        if tag.i and tag.i.b:
+            name = tag.i.text.replace('\n', ' ').strip()
+            desc = re.sub(name, '', tag.text).replace('\n', ' ').strip()
+            name = re.sub('.$', '', name)
+            ability['name'] = name
+            ability['description'] = desc
+
+            caster = re.search("Lanzamiento de conjuro", tag.i.text)
+            if caster:
+                ability['spells'] = []
+
+            result.append(ability)
+
+        elif tag.b:
+            name = tag.b.text.replace('\n', ' ').strip()
+            desc = re.sub(name, '', tag.text).replace('\n', ' ').strip()
+            name = re.sub('.$', '', name)
+            ability['name'] = name
+            ability['description'] = desc
+            if not caster:
+                result.append(ability)
+            else:
+                spell = ability
+                result[-1]['spells'].append(spell)
+
+        else:
+            description = '\n' + tag.text.replace('\n', ' ')
+            description = description.replace('*', '').strip()
+            result[-1]['description'] += description
+
+    return result
+
+
+def extract_actions(content: Tag) -> Dict[str, str]:
     return "TODO"
 
 
-def extract_actions(content):
-    return "TODO"
-
-
-def extract_legendary_actions(content):
+def extract_legendary_actions(content: Tag) -> Dict[str, str]:
     return "TODO"
