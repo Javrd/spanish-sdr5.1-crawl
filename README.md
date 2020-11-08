@@ -15,5 +15,7 @@ This in progress project is a crawler to get the Spanish SRD 5.1 in json format 
 2. Run the main script
 
    ```bash
-   python main.py
+   env/bin/python src/main.py
    ```
+
+You can also launch or debug it with vscode just pressing F5.
