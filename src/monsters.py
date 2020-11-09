@@ -310,8 +310,7 @@ def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
                 result.append(ability)
 
         else:
-            description = tag.text.replace('\n', ' ')
-            description = description.replace('*', '').strip()
+            description = tag.text.replace('\n', ' ').strip()
             result[-1]['description'] += '\n' + description
 
     return result
