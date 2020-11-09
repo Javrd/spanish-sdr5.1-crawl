@@ -46,7 +46,7 @@ def extract_from_url(path: str):
             'speed': m.extract_speed(content),
             'initiative': m.extract_initiative(content),
             'abilities': m.extract_abilities(content),
-            'saving-throws': m.extract_saving_throws(content),
+            'saving_throws': m.extract_saving_throws(content),
             'skills': m.extract_skills(content),
             'damage_vulnerabilities': m.extract_vulnerabilities(content),
             'damage_resistances': m.extract_resistances(content),
@@ -57,6 +57,7 @@ def extract_from_url(path: str):
             'challenge_rating': m.extract_challenge_rating(content),
             'special_abilities': m.extract_special_abilities(content),
             'actions': m.extract_actions(content),
+            'reactions': m.extract_reactions(content),
             'legendary_actions': m.extract_legendary_actions(content),
             'source': source,
         }
@@ -80,4 +81,4 @@ if __name__ == '__main__':
         os.mkdir(output_folder)
 
     with open(f'{output_folder}/monsters.json', 'w', encoding='utf-8') as f:
-        json.dump(result, f, ensure_ascii=False)
+        json.dump(result, f, ensure_ascii=False, indent=2)

@@ -1,8 +1,12 @@
 import os
 import re
+from typing import List, Tuple, Union
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag
+
+from custom_types import Action
 
 
 def find_index(flist, func):
@@ -67,7 +71,7 @@ def extract_damage_text(input_text):
     result = []
     for text in input_text.split(';'):
         # Skip errates
-        if (any(char.isdigit() for char in text)):
+        if any(char.isdigit() for char in text):
             continue
         match = re.search(r'( de ataques.+)|( de armas.+)', text)
         if match:
@@ -79,4 +83,46 @@ def extract_damage_text(input_text):
 
         text_array = [text.strip().capitalize() for text in text_array]
         result += text_array
+    return result
+
+
+def get_actions(content: Tag,
+                tag_name: str,
+                help_=False) -> Union[List[Action], Tuple[str, List[Action]]]:
+    help_text = None
+    p_list = content.find_all('p')
+    tag = content.find('b', string=re.compile(tag_name + r':?\s?'))
+    if not tag:
+        return []
+
+    actions_index = find_index(p_list, lambda p: tag == p.b)
+    action_list = p_list[actions_index + 1:]
+
+    result = []
+    for tag in action_list:
+        if len(tag.contents) == 1 and result:
+            break
+        if tag.i and tag.i.b:
+            name = re.sub(r'\.|:$', '', tag.i.text.replace('\n', ' ').strip())
+            desc = tag.text.replace(tag.i.text, '').replace('\n', ' ').strip()
+            result.append({'name': name, 'description': desc})
+        elif tag.b:
+            name = re.sub(r'\.|:$', '', tag.b.text.replace('\n', ' ').strip())
+            desc = tag.text.replace(tag.b.text, '').replace('\n', ' ').strip()
+            extra = {'name': name, 'description': desc}
+            last = result[-1]
+            if not 'extra' in last:
+                last['extra'] = [extra]
+            else:
+                last['extra'].append(extra)
+        else:
+            if help_:
+                help_text = tag.text.replace('\n', ' ').strip()
+                help_ = False
+            else:
+                desc = '\n' + tag.text.replace('\n', ' ')
+                result[-1]['description'] += desc.strip()
+
+    if help_text:
+        return result, help_text
     return result

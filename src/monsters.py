@@ -3,9 +3,9 @@ from typing import Dict, List, Tuple, Union
 
 from bs4.element import Tag
 
-from custom_types import SpecialAbility
+from custom_types import Action, LegendaryActions, SpecialAbility
 from utils import (extract_damage_text, extract_text_from_parent_tag,
-                   extract_text_from_tag, find_index)
+                   extract_text_from_tag, find_index, get_actions)
 
 
 def extract_name(content: Tag) -> str:
@@ -277,19 +277,21 @@ def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
     cr_index = find_index(p_list, lambda p: p.b == tag)
     tag = content.find('b', string=re.compile(r'Acciones:?\s?'))
     actions_index = find_index(p_list, lambda p: p.b == tag)
-    end = actions_index if actions_index != -1 else len(p_list) - 1
-    special_abilities = p_list[cr_index + 1:end]
+    if actions_index == cr_index + 1:
+        return []
+
+    special_abilities = p_list[cr_index + 1:]
 
     result = []
     caster = None
     for tag in special_abilities:
         ability = {}
+        if len(tag.contents) == 1 and result:
+            break
         if tag.i and tag.i.b:
-            name = tag.i.text.replace('\n', ' ').strip()
-            desc = re.sub(name, '', tag.text).replace('\n', ' ').strip()
-            name = re.sub('.$', '', name)
-            ability['name'] = name
-            ability['description'] = desc
+            name = re.sub(r'\.|:$', '', tag.i.text.replace('\n', ' ').strip())
+            desc = tag.text.replace(tag.i.text, '').replace('\n', ' ').strip()
+            ability = {'name': name, 'description': desc}
 
             caster = re.search('Lanzamiento de conjuro', tag.i.text)
             if caster:
@@ -298,28 +300,34 @@ def extract_special_abilities(content: Tag) -> List[SpecialAbility]:
             result.append(ability)
 
         elif tag.b:
-            name = tag.b.text.replace('\n', ' ').strip()
-            desc = re.sub(name, '', tag.text).replace('\n', ' ').strip()
-            name = re.sub('.$', '', name)
-            ability['name'] = name
-            ability['description'] = desc
-            if not caster:
-                result.append(ability)
-            else:
-                spell = ability
+            name = re.sub(r'\.|:$', '', tag.b.text.replace('\n', ' ').strip())
+            desc = tag.text.replace(tag.b.text, '').replace('\n', ' ').strip()
+            if caster:
+                spell = {'name': name, 'description': desc}
                 result[-1]['spells'].append(spell)
+            else:
+                ability = {'name': name, 'description': desc}
+                result.append(ability)
 
         else:
-            description = '\n' + tag.text.replace('\n', ' ')
+            description = tag.text.replace('\n', ' ')
             description = description.replace('*', '').strip()
-            result[-1]['description'] += description
+            result[-1]['description'] += '\n' + description
 
     return result
 
 
-def extract_actions(content: Tag) -> Dict[str, str]:
-    return 'TODO'
+def extract_actions(content: Tag) -> List[Dict[str, str]]:
+    return get_actions(content, "Acciones")
 
 
-def extract_legendary_actions(content: Tag) -> Dict[str, str]:
-    return 'TODO'
+def extract_reactions(content: Tag) -> List[Action]:
+    return get_actions(content, "Reacciones")
+
+
+def extract_legendary_actions(content: Tag) -> LegendaryActions:
+    legendary_actions = get_actions(content, "Acciones legendarias", True)
+    if not legendary_actions:
+        return {}
+    list_, help_ = legendary_actions
+    return {"help": help_, "list": list_}
